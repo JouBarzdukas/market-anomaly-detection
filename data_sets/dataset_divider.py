@@ -23,4 +23,20 @@ def test_open_file():
         print(f"Error opening file: {e}")
         return None
     
+
+def return_single_row():
+    import pandas as pd
+
+    df = pd.read_excel(FILE_LOCATION,
+                    skiprows=5,
+                    header=0)
+    df = df[df['Ticker'].notna()].reset_index(drop=True)
+
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.map(' '.join).str.strip()
+    print(df.iloc[0])
+
+
+    
 test_open_file()
+return_single_row()
