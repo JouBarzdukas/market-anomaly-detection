@@ -11,9 +11,8 @@ from sklearn.model_selection import TimeSeriesSplit, KFold
 # Data input is going to be .xlsx file for now
 
 def initialize_data_pointer(FILE_LOCATION):
-    data_set = pd.read_excel(FILE_LOCATION, skiprows=5, header=0)
+    data_set = pd.read_excel(FILE_LOCATION, sheet_name='EWS')
     data_set = data_set.loc[:, ~data_set.columns.str.contains(r"^Unnamed")]
-    data_set = data_set[data_set['Ticker'].notna()].reset_index(drop=True)
     return data_set
 
 def format_to_sql(data_set, file_location, table_name):
