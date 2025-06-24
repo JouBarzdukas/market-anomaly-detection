@@ -13,6 +13,7 @@ from sklearn.model_selection import TimeSeriesSplit, KFold
 def initialize_data_pointer(FILE_LOCATION):
     data_set = pd.read_excel(FILE_LOCATION, sheet_name='EWS')
     data_set = data_set.loc[:, ~data_set.columns.str.contains(r"^Unnamed")]
+    data_set['Date'] = pd.to_datetime(data_set['Data'])
     return data_set
 
 def format_to_sql(data_set, file_location, table_name):
