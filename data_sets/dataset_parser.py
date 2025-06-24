@@ -15,30 +15,30 @@ def initialize_data_pointer(FILE_LOCATION):
     data_set = data_set.loc[:, ~data_set.columns.str.contains(r"^Unnamed")]
     data_set = data_set.rename(columns={'Data': 'Date'})
     data_set['Date'] = pd.to_datetime(data_set['Date'])
-    data_set = data_set.sort_values('Date').set_index('Date', drop=False)
+    data_set = data_set.sort_values('Date').set_index('Date', drop=True)
     data_set = data_set.drop(columns=['Data'], errors='ignore')
     data_set = data_set[~data_set.index.duplicated(keep='first')]
     return data_set
 
 def format_to_sql(data_set, file_location, table_name):
     engine = create_engine(f"sqlite:///{file_location}")
-    data_set.to_sql(table_name, con=engine, if_exists='replace', index=True, index_label='id')
+    data_set.to_sql(table_name, con=engine, if_exists='replace', index=True, index_label='Date')
     engine.dispose()
 
 def make_training_data(data_set, n_splits=5):
     kfold = KFold(n_splits=n_splits, shuffle=False)
     walk_forward = TimeSeriesSplit(n_splits=n_splits)
     return {
-        'KFold':      [data_set.iloc[train].reset_index(drop=True) for train, _ in kfold.split(data_set)],
-        'WalkForward':[data_set.iloc[train].reset_index(drop=True) for train, _ in walk_forward.split(data_set)]
+        'KFold':      [data_set.iloc[train] for train, _ in kfold.split(data_set)],
+        'WalkForward':[data_set.iloc[train] for train, _ in walk_forward.split(data_set)]
     }
 
 def make_validation_data(data_set, n_splits=5):
     kfold = KFold(n_splits=n_splits, shuffle=False)
     walk_forward = TimeSeriesSplit(n_splits=n_splits)
     return {
-        'KFold':      [data_set.iloc[valid].reset_index(drop=True) for _, valid in kfold.split(data_set)],
-        'WalkForward':[data_set.iloc[valid].reset_index(drop=True) for _, valid in walk_forward.split(data_set)]
+        'KFold':      [data_set.iloc[valid] for _, valid in kfold.split(data_set)],
+        'WalkForward':[data_set.iloc[valid] for _, valid in walk_forward.split(data_set)]
     }
 
 def push_to_sql(data_sets, path):
@@ -48,9 +48,9 @@ def push_to_sql(data_sets, path):
     engine = create_engine(f"sqlite:///{path}")
     if isinstance(data_sets, list):
         for i, df in enumerate(data_sets, 1):
-            df.to_sql(f"fold_{i}", con=engine, if_exists="replace", index=True, index_label="id")
+            df.to_sql(f"fold_{i}", con=engine, if_exists="replace", index=True, index_label="Date")
     else:
-        data_sets.to_sql("financial_data", con=engine, if_exists="replace", index=True, index_label="id")
+        data_sets.to_sql("financial_data", con=engine, if_exists="replace", index=True, index_label="Date")
     engine.dispose()
 
 
