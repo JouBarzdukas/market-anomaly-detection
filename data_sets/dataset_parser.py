@@ -7,6 +7,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sklearn.model_selection import TimeSeriesSplit, KFold
 
+PURGE = 5
 # Two methods -> KFold and TimeSeriesSplit
 # Data input is going to be .xlsx file for now
 
@@ -25,20 +26,23 @@ def format_to_sql(data_set, file_location, table_name):
     data_set.to_sql(table_name, con=engine, if_exists='replace', index=True, index_label='Date')
     engine.dispose()
 
+def apply_purge(training_index, validation_index, k=PURGE):
+    return training_index[training_index < validation_index[0] - k]
+
 def make_training_data(data_set, n_splits=5):
     kfold = KFold(n_splits=n_splits, shuffle=False)
     walk_forward = TimeSeriesSplit(n_splits=n_splits)
     return {
-        'KFold':      [data_set.iloc[train] for train, _ in kfold.split(data_set)],
-        'WalkForward':[data_set.iloc[train] for train, _ in walk_forward.split(data_set)]
+        'KFold':      [data_set.iloc[apply_purge(train, val)] for train, val in kfold.split(data_set)],
+        'WalkForward':[data_set.iloc[apply_purge(train, val)] for train, val in walk_forward.split(data_set)]
     }
 
 def make_validation_data(data_set, n_splits=5):
     kfold = KFold(n_splits=n_splits, shuffle=False)
     walk_forward = TimeSeriesSplit(n_splits=n_splits)
     return {
-        'KFold':      [data_set.iloc[valid] for _, valid in kfold.split(data_set)],
-        'WalkForward':[data_set.iloc[valid] for _, valid in walk_forward.split(data_set)]
+        'KFold':      [data_set.iloc[val] for _, val in kfold.split(data_set)],
+        'WalkForward':[data_set.iloc[val] for _, val in walk_forward.split(data_set)]
     }
 
 def push_to_sql(data_sets, path):
