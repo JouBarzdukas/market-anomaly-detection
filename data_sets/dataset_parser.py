@@ -62,7 +62,7 @@ training_data    = make_training_data(data_set)
 validation_data  = make_validation_data(data_set)
 
 for train_type, data in training_data.items():
-    push_to_sql(data, f"data_sets/{train_type}/{train_type}_formatted.db")
+    push_to_sql(data, f"data_sets/{train_type}/{train_type}_train.db")
 
 for valid_type, data in validation_data.items():
-    push_to_sql(data, f"data_sets/{valid_type}/{valid_type}_formatted.db")
+    push_to_sql(data, f"data_sets/{valid_type}/{valid_type}_val.db")
