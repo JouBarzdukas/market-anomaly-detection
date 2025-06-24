@@ -13,7 +13,11 @@ from sklearn.model_selection import TimeSeriesSplit, KFold
 def initialize_data_pointer(FILE_LOCATION):
     data_set = pd.read_excel(FILE_LOCATION, sheet_name='EWS')
     data_set = data_set.loc[:, ~data_set.columns.str.contains(r"^Unnamed")]
-    data_set['Date'] = pd.to_datetime(data_set['Data'])
+    data_set = data_set.rename(columns={'Data': 'Date'})
+    data_set['Date'] = pd.to_datetime(data_set['Date'])
+    data_set = data_set.sort_values('Date').set_index('Date', drop=False)
+    data_set = data_set.drop(columns=['Data'], errors='ignore')
+    data_set = data_set[~data_set.index.duplicated(keep='first')]
     return data_set
 
 def format_to_sql(data_set, file_location, table_name):
@@ -39,6 +43,8 @@ def make_validation_data(data_set, n_splits=5):
 
 def push_to_sql(data_sets, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.isfile(path):
+        os.remove(path)
     engine = create_engine(f"sqlite:///{path}")
     if isinstance(data_sets, list):
         for i, df in enumerate(data_sets, 1):
