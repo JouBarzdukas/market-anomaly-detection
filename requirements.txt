@@ -1,5 +1,8 @@
 pandas
+numpy
 SQLAlchemy
 openpyxl
 scikit-learn
+lightgbm
+joblib
 matplotlib
